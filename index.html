@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>yuzu Commission</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#11151c;
+    --bg-alt:#161b24;
+    --surface:#1c222c;
+    --border:#2a323e;
+    --text:#dfe3ea;
+    --text-dim:#8b94a3;
+    --accent:#5c7693;
+    --accent-bright:#8fa9c2;
+    --accent-glow:rgba(124,151,179,.30);
+    --gap-side: clamp(1.25rem, 6vw, 4rem);
+    --gap-section: clamp(3.5rem, 9vw, 6.5rem);
+    --radius: 6px;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ animation:none !important; transition:none !important; }
+  }
+
+  body{
+    margin:0;
+    width:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"IBM Plex Sans KR", sans-serif;
+    font-weight:400;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3{
+    font-family:"Gowun Batang", serif;
+    font-weight:700;
+    margin:0;
+    color:var(--text);
+  }
+
+  a{ color:inherit; text-decoration:none; }
+  ul,ol{ margin:0; padding:0; list-style:none; }
+  button{ font-family:inherit; cursor:pointer; }
+  input,select,textarea{ font-family:inherit; }
+
+  :focus-visible{
+    outline:2px solid var(--accent-bright);
+    outline-offset:3px;
+  }
+
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.72rem;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--accent-bright);
+    margin:0 0 .9rem;
+  }
+
+  /* ---------- nav ---------- */
+  .gnav{
+    position:sticky;
+    top:0;
+    width:100%;
+    z-index:100;
+    background:rgba(17,21,28,.86);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  .gnav-inner{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:clamp(.8rem,2vw,1.1rem) var(--gap-side);
+    position:relative;
+  }
+  .gnav-brand{
+    font-family:"Gowun Batang", serif;
+    font-size:1.05rem;
+    letter-spacing:.02em;
+  }
+  .gnav-toggle{
+    display:none;
+    background:none;
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:var(--radius);
+    padding:.4rem .7rem;
+    font-size:.85rem;
+  }
+  .gnav-list{
+    display:flex;
+    gap:clamp(1rem,3vw,2.4rem);
+  }
+  .gnav-list a{
+    font-size:.88rem;
+    color:var(--text-dim);
+    position:relative;
+    padding:.2rem 0;
+    transition:color .25s ease;
+  }
+  .gnav-list a::after{
+    content:"";
+    position:absolute;
+    left:0; bottom:-3px;
+    width:0%; height:1px;
+    background:var(--accent-bright);
+    transition:width .25s ease;
+  }
+  .gnav-list a.active,
+  .gnav-list a:hover{ color:var(--text); }
+  .gnav-list a.active::after,
+  .gnav-list a:hover::after{ width:100%; }
+
+  @media (max-width:760px){
+    .gnav-toggle{ display:inline-flex; align-items:center; gap:.4rem; }
+    .gnav-list{
+      position:absolute;
+      top:100%; left:0;
+      width:100%;
+      flex-direction:column;
+      gap:0;
+      background:var(--bg-alt);
+      border-bottom:1px solid var(--border);
+      max-height:0;
+      overflow:hidden;
+      transition:max-height .3s ease;
+    }
+    .gnav-list.open{ max-height:420px; }
+    .gnav-list li{ width:100%; }
+    .gnav-list a{
+      display:block;
+      width:100%;
+      padding:.9rem var(--gap-side);
+      border-top:1px solid var(--border);
+    }
+    .gnav-list a::after{ display:none; }
+  }
+
+  /* ---------- wave divider (signature element) ---------- */
+  .wave-divider{ width:100%; line-height:0; background:inherit; }
+  .wave-divider svg{ width:100%; height:46px; display:block; }
+  .wave-line{ fill:none; stroke:var(--accent); stroke-width:1.4; opacity:.5; }
+  .wave-glow{ fill:none; stroke:var(--accent-bright); stroke-width:7; opacity:.16; filter:blur(7px); animation:waveGlow 7s ease-in-out infinite; }
+  @keyframes waveGlow{ 0%,100%{ opacity:.10; } 50%{ opacity:.28; } }
+
+  /* ---------- hero ---------- */
+  .hero{
+    width:100%;
+    min-height:clamp(380px,62vh,640px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+    padding: clamp(2.5rem,8vw,4rem) var(--gap-side);
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 20%, var(--accent-glow), transparent 70%),
+      var(--bg);
+  }
+  .hero .eyebrow{ margin-bottom:1.1rem; }
+  .hero h1{
+    font-size:clamp(2.2rem,6.4vw,3.7rem);
+    letter-spacing:.01em;
+  }
+  .hero-sub{
+    margin-top:1rem;
+    color:var(--text-dim);
+    font-size:clamp(.95rem,1.8vw,1.05rem);
+    max-width:46ch;
+  }
+  .hero-status{
+    margin-top:1.8rem;
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.78rem;
+    letter-spacing:.08em;
+    color:var(--accent-bright);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:.5rem 1.1rem;
+  }
+  .hero-status .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--accent-bright);
+    box-shadow:0 0 8px var(--accent-bright);
+  }
+
+  /* ---------- sections ---------- */
+  .section{ width:100%; background:var(--bg); }
+  .section.section-alt{ background:var(--bg-alt); }
+  .section-inner{
+    width:100%;
+    padding: var(--gap-section) var(--gap-side);
+  }
+  .section-head{ margin-bottom:clamp(2rem,5vw,3rem); }
+  .section-head h2{ font-size:clamp(1.6rem,4vw,2.3rem); }
+  .section-desc{
+    margin-top:.8rem;
+    color:var(--text-dim);
+    max-width:60ch;
+  }
+
+  /* ---------- notice ---------- */
+  .notice-list{ display:flex; flex-direction:column; }
+  .notice-item{
+    display:grid;
+    grid-template-columns:auto auto 1fr;
+    gap:.4rem 1rem;
+    align-items:baseline;
+    padding:1.4rem 0;
+    border-bottom:1px solid var(--border);
+  }
+  .notice-item:first-child{ border-top:1px solid var(--border); }
+  .notice-tag{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.7rem;
+    letter-spacing:.1em;
+    color:var(--accent-bright);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:.2rem .6rem;
+    white-space:nowrap;
+  }
+  .notice-date{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.78rem;
+    color:var(--text-dim);
+    white-space:nowrap;
+  }
+  .notice-title{
+    grid-column:1 / -1;
+    margin:.5rem 0 0;
+    font-weight:600;
+    font-size:1.02rem;
+  }
+  .notice-body{
+    grid-column:1 / -1;
+    margin:.3rem 0 0;
+    color:var(--text-dim);
+    font-size:.92rem;
+  }
+  @media (max-width:560px){
+    .notice-item{ grid-template-columns:auto 1fr; }
+  }
+
+  /* ---------- inquiry ---------- */
+  .inquiry-form{
+    width:100%;
+    max-width:none;
+    display:flex;
+    flex-direction:column;
+    gap:1.2rem;
+    margin-top:1rem;
+  }
+  .form-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1.2rem;
+  }
+  @media (max-width:640px){
+    .form-row{ grid-template-columns:1fr; }
+  }
+  .inquiry-form label{
+    display:flex;
+    flex-direction:column;
+    gap:.5rem;
+    font-size:.85rem;
+    color:var(--text-dim);
+  }
+  .inquiry-form input,
+  .inquiry-form select,
+  .inquiry-form textarea{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    color:var(--text);
+    padding:.75rem .9rem;
+    font-size:.92rem;
+    resize:vertical;
+  }
+  .inquiry-form input::placeholder,
+  .inquiry-form textarea::placeholder{ color:#5b6472; }
+  .form-check{
+    flex-direction:row;
+    align-items:center;
+    gap:.6rem;
+    font-size:.85rem;
+  }
+  .form-check input{ width:auto; accent-color:var(--accent-bright); }
+  .form-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:1rem;
+  }
+  .btn-copy, .btn-pdf{
+    border-radius:var(--radius);
+    padding:.85rem 1.8rem;
+    font-size:.92rem;
+    font-weight:600;
+    transition:opacity .2s ease, background .2s ease;
+  }
+  .btn-copy{
+    background:transparent;
+    border:1px solid var(--accent-bright);
+    color:var(--accent-bright);
+  }
+  .btn-copy:hover{ background:rgba(143,169,194,.12); }
+  .btn-pdf{
+    background:var(--accent-bright);
+    color:#11151c;
+    border:none;
+  }
+  .btn-pdf:hover{ opacity:.85; }
+  .form-status{
+    font-size:.85rem;
+    color:var(--accent-bright);
+    min-height:1.2em;
+    margin:0;
+  }
+  .form-note{
+    font-size:.78rem;
+    color:var(--text-dim);
+    border-left:2px solid var(--border);
+    padding-left:.8rem;
+  }
+
+  /* ---------- pdf template (offscreen capture target) ---------- */
+  .pdf-template{
+    position:fixed;
+    left:-9999px;
+    top:0;
+    width:680px;
+    background:#ffffff;
+    color:#1c222c;
+    font-family:"IBM Plex Sans KR", sans-serif;
+    padding:48px;
+  }
+  .pdf-template h2{
+    font-family:"Gowun Batang", serif;
+    font-size:22px;
+    margin:0 0 28px;
+    color:#11151c;
+  }
+  .pdf-row{
+    display:flex;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid #e3e6ea;
+  }
+  .pdf-label{
+    width:120px;
+    flex-shrink:0;
+    font-weight:600;
+    color:#5c7693;
+    font-size:13px;
+  }
+  .pdf-value{
+    flex:1;
+    font-size:14px;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .pdf-date{
+    margin-top:28px;
+    font-size:12px;
+    color:#8b94a3;
+    text-align:right;
+  }
+
+  /* ---------- price table (카테고리 > 상세 카테고리 > 항목) ---------- */
+  .price-table{
+    display:flex;
+    flex-direction:column;
+    gap:1.4rem;
+    margin-top:1rem;
+  }
+  .price-category{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:1.4rem 1.6rem;
+  }
+  .price-category-name{
+    font-size:1.05rem;
+    margin:0 0 1rem;
+    padding-bottom:.8rem;
+    border-bottom:1px solid var(--border);
+  }
+  .price-groups{
+    display:flex;
+    flex-direction:column;
+    gap:1rem;
+  }
+  .price-group{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:.5rem 1rem;
+  }
+  .price-group-label{
+    flex-shrink:0;
+    width:128px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.72rem;
+    letter-spacing:.05em;
+    color:var(--accent-bright);
+    margin:0;
+  }
+  .price-items{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.6rem;
+    flex:1;
+    min-width:0;
+  }
+  .price-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:.45rem .9rem;
+    font-size:.82rem;
+  }
+  .price-chip-name{ color:var(--text); }
+  .price-chip-amount{
+    color:var(--accent-bright);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.78rem;
+    white-space:nowrap;
+  }
+  .price-note{
+    margin-top:1.6rem;
+    font-size:.82rem;
+    color:var(--text-dim);
+  }
+  @media (max-width:560px){
+    .price-group{ flex-direction:column; align-items:flex-start; gap:.5rem; }
+    .price-group-label{ width:auto; }
+  }
+
+  /* ---------- portfolio ---------- */
+  .portfolio-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:1.2rem;
+    margin-top:1rem;
+  }
+  .portfolio-item{ margin:0; }
+  .portfolio-ph{
+    width:100%;
+    aspect-ratio:1/1;
+    background:var(--surface);
+    border:1px dashed var(--border);
+    border-radius:var(--radius);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--text-dim);
+    font-size:.85rem;
+  }
+  .portfolio-img{
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:var(--radius);
+    display:block;
+  }
+  .portfolio-item figcaption{
+    margin-top:.6rem;
+    font-size:.82rem;
+    color:var(--text-dim);
+  }
+
+  /* ---------- process ---------- */
+  .process-list{
+    display:flex;
+    flex-direction:column;
+    margin-top:1rem;
+  }
+  .process-item{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:1.4rem;
+    padding:1.6rem 0;
+    border-bottom:1px solid var(--border);
+  }
+  .process-item:first-child{ border-top:1px solid var(--border); }
+  .process-num{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:1.4rem;
+    color:var(--accent-bright);
+    line-height:1;
+  }
+  .process-item h3{ font-size:1.05rem; margin-bottom:.4rem; }
+  .process-item p{ color:var(--text-dim); font-size:.9rem; margin:0; }
+
+  /* ---------- footer ---------- */
+  .site-footer{
+    width:100%;
+    background:var(--bg-alt);
+    border-top:1px solid var(--border);
+    padding: clamp(2.4rem,6vw,3.4rem) var(--gap-side);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1rem;
+    text-align:center;
+  }
+  .site-footer .gnav-brand{ font-size:1.1rem; }
+  .sns-list{ display:flex; gap:1.4rem; }
+  .sns-list a{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.78rem;
+    letter-spacing:.05em;
+    color:var(--text-dim);
+  }
+  .sns-list a:hover{ color:var(--accent-bright); }
+  .copyright{
+    font-size:.75rem;
+    color:#5b6472;
+  }
+</style>
+</head>
+<body>
+
+  <nav class="gnav">
+    <div class="gnav-inner">
+      <a class="gnav-brand" href="#top">yuuchann</a>
+      <button class="gnav-toggle" id="navToggle" aria-expanded="false" aria-controls="navList">메뉴</button>
+      <ul class="gnav-list" id="navList">
+        <li><a href="#notice" data-nav>공지사항</a></li>
+        <li><a href="#inquiry" data-nav>문의</a></li>
+        <li><a href="#price" data-nav>가격표</a></li>
+        <li><a href="#portfolio" data-nav>포트폴리오</a></li>
+        <li><a href="#process" data-nav>작업 과정</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <p class="eyebrow">Commission Page</p>
+    <h1>yuuchann</h1>
+    <p class="hero-sub">빠른 마감, VSF, VRC</p>
+    <span class="hero-status"><span class="dot"></span>WAITLIST</span>
+  </header>
+
+  <div class="wave-divider" aria-hidden="true">
+    <svg viewBox="0 0 1200 60" preserveAspectRatio="none">
+      <path class="wave-glow" d="M0,30 C150,0 350,60 600,30 C850,0 1050,60 1200,30"/>
+      <path class="wave-line" d="M0,30 C150,0 350,60 600,30 C850,0 1050,60 1200,30"/>
+    </svg>
+  </div>
+
+  <main>
+
+    <!-- 공지사항 -->
+    <section class="section" id="notice">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">Notice</p>
+          <h2>공지사항</h2>
+          <p class="section-desc">문의 전 반드시 확인해주세요.</p>
+        </div>
+        <ul class="notice-list" id="noticeList"></ul>
+      </div>
+    </section>
+
+    <div class="wave-divider" aria-hidden="true">
+      <svg viewBox="0 0 1200 60" preserveAspectRatio="none">
+        <path class="wave-glow" d="M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30"/>
+        <path class="wave-line" d="M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30"/>
+      </svg>
+    </div>
+
+    <!-- 문의 양식 -->
+    <section class="section section-alt" id="inquiry">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">Inquiry</p>
+          <h2>문의 양식</h2>
+          <p class="section-desc">공지사항과 가격표를 확인하신 후 문의해주세요.</p>
+        </div>
+        <form class="inquiry-form">
+          <div class="form-row">
+            <label>닉네임
+              <input type="text" id="fName" placeholder="예: 홍길동">
+            </label>
+            <label>연락 방법
+              <input type="text" id="fContact" placeholder="디스코드 / 메일 / 트위터 등">
+            </label>
+          </div>
+          <div class="form-row">
+            <label>커미션 옵션
+              <select id="fType">
+                <option>선택해주세요</option>
+                <option>[가성비 세트]간단 성형+5가지 기본 페이셜+전용 헤어1+전용 의상1+눈 텍스쳐(100,000원)</option>
+                <option>[고급 세트]고급 성형(블랜더 작업)+52가지 페이셜+전용 헤어1+전용 의상1+눈 텍스쳐(200,000원)</option>
+              </select>
+            </label>
+            <label>예산
+              <input type="text" id="fBudget" placeholder="예: 00,000원">
+            </label>
+          </div>
+          <label>요청 내용
+            <textarea id="fMessage" rows="5" placeholder="구체적인 요청 내용, 참고 자료 링크 등을 입력해주세요."></textarea>
+          </label>
+          <label class="form-check">
+            <input type="checkbox">
+            공지사항과 가격표를 모두 확인했습니다
+          </label>
+          <div class="form-actions">
+            <button type="button" class="btn-copy" id="copyBtn">내용 복사하기</button>
+            <button type="button" class="btn-pdf" id="pdfBtn">PDF로 다운로드</button>
+          </div>
+          <p class="form-status" id="formStatus" aria-live="polite"></p>
+          <p class="form-note">※ 이 폼은 서버로 전송되지 않습니다. 복사하거나 PDF로 저장해서 디스코드 · 메일 등으로 직접 보내주세요.</p>
+        </form>
+      </div>
+    </section>
+
+    <div class="wave-divider" aria-hidden="true">
+      <svg viewBox="0 0 1200 60" preserveAspectRatio="none">
+        <path class="wave-glow" d="M0,30 C150,0 350,60 600,30 C850,0 1050,60 1200,30"/>
+        <path class="wave-line" d="M0,30 C150,0 350,60 600,30 C850,0 1050,60 1200,30"/>
+      </svg>
+    </div>
+
+    <!-- 가격표 -->
+    <section class="section" id="price">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">Price</p>
+          <h2>가격표</h2>
+          <p class="section-desc">기본 선택지 외 추가 옵션</p>
+        </div>
+        <div class="price-table" id="priceTable"></div>
+        <p class="price-note">※ 추가 옵션, 수정 횟수, 입금 안내 등 상세 내용을 입력하세요.</p>
+      </div>
+    </section>
+
+    <div class="wave-divider" aria-hidden="true">
+      <svg viewBox="0 0 1200 60" preserveAspectRatio="none">
+        <path class="wave-glow" d="M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30"/>
+        <path class="wave-line" d="M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30"/>
+      </svg>
+    </div>
+
+    <!-- 포트폴리오 -->
+    <section class="section section-alt" id="portfolio">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">Portfolio</p>
+          <h2>포트폴리오</h2>
+          <p class="section-desc">대표 작업물을 추가하세요.</p>
+        </div>
+        <div class="portfolio-grid" id="portfolioGrid"></div>
+      </div>
+    </section>
+
+    <div class="wave-divider" aria-hidden="true">
+      <svg viewBox="0 0 1200 60" preserveAspectRatio="none">
+        <path class="wave-glow" d="M0,30 C150,0 350,60 600,30 C850,0 1050,60 1200,30"/>
+        <path class="wave-line" d="M0,30 C150,0 350,60 600,30 C850,0 1050,60 1200,30"/>
+      </svg>
+    </div>
+
+    <!-- 작업 과정 -->
+    <section class="section" id="process">
+      <div class="section-inner">
+        <div class="section-head">
+          <p class="eyebrow">Process</p>
+          <h2>작업 과정</h2>
+          <p class="section-desc">안내된 순서에 따라 작업이 진행됩니다.</p>
+        </div>
+        <ol class="process-list">
+          <li class="process-item">
+            <span class="process-num">01</span>
+            <div><h3>문의 및 상담</h3><p>상담을 통해 예산에 맞는 견적을 제공합니다.</p></div>
+          </li>
+          <li class="process-item">
+            <span class="process-num">02</span>
+            <div><h3>에셋 구매 및 작업 시작</h3><p>구매가 필요한 에셋 비용을 우선 입금 받고 구매 이후 작업을 시작합니다.</p></div>
+          </li>
+          <li class="process-item">
+            <span class="process-num">03</span>
+            <div><h3>중간 확인</h3><p>성형 완료 후 확인 및 수정이 진행됩니다.</p></div>
+          </li>
+          <li class="process-item">
+            <span class="process-num">04</span>
+            <div><h3>작업 완료 및 전달</h3><p>전달 파일은 메일로 전달됩니다.</p></div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <a class="gnav-brand" href="#top">yuuchann</a>
+    <p class="copyright">© 2024 yuuchann. All rights reserved.</p>
+  </footer>
+
+  <div class="pdf-template" id="pdfTemplate" aria-hidden="true"></div>
+
+  <script>
+    // ---------- 공지사항 / 가격표 / 포트폴리오: data.json 기반 렌더링 ----------
+    const DEFAULT_SITE_DATA = {
+      notices: [
+        { tag: '안냐', date: '2023.05.22', title: '기본 작업 범위', body: '제가 가지고 있는 캐릭터 키쿄, 마메히나타를 제외한 캐릭터 아바타 사용시 아바타 구매 비용이 추가됩니다.' },
+        { tag: '안내', date: '2023.05.22', title: '에셋(옷/메이크업/소품) 관련 안내', body: '본 커미션은 작업비 외에 사용되는 유료 에셋 비용이 별도로 발생합니다.\n- 에셋 비용 부담: 신청자 본인 부담\n- 작업자에게 없는 유료 에셋(의상, 헤어 등)을 사용하는 경우, 신청자분께서 해당 금액을 선입금 해주셔야 작업이 가능합니다.' },
+        { tag: '안내', date: '2023.05.22', title: '라이선스 규정', body: '부스(Booth) 등에서 판매되는 유료 에셋을 사용할 경우, 작업자와 신청자 양측 모두 해당 에셋을 구매(소유)하고 있어야 합니다.\n- 이는 제작자의 저작권 및 약관(VN3 라이선스 등) 준수를 위함이며, 대리 구매나 파일 공유는 절대 불가능합니다.' }
+      ],
+      priceCategories: [
+        {
+          category: 'VSF',
+          groups: [
+            { label: '전용 파츠 추가', items: [
+              { name: '전용 헤어', price: '10,000원' },
+              { name: '전용 의상', price: '20,000원' },
+              { name: '전용 악세', price: '5,000원' }
+            ]},
+            { label: '기타', items: [
+              { name: '헤어 뚫림 방지', price: '10,000원' }
+            ]}
+          ]
+        },
+        {
+          category: '추가기능',
+          groups: [
+            { label: '기능', items: [
+              { name: '옷장기능 추가', price: '5,000원' }
+            ]}
+          ]
+        },
+        {
+          category: '파츠',
+          groups: [
+            { label: '표정', items: [
+              { name: '표정 추가', price: '개당 15,000원' }
+            ]},
+            { label: '헤어 컬러', items: [
+              { name: '파츠에 없는 색으로 변경', price: '5,000원' }
+            ]}
+          ]
+        }
+      ],
+      portfolio: [
+        { image: 'https://lh3.googleusercontent.com/OyeP0RpGra9usO7IVDjc-XI7h30zCvfj5gdtzYflqS5xxuNHTrOWikUTn10npDryyScNRy4xNancMHREbgTWCG3LazU9xTY0gBIR_h1nLXls0BEWeFNA=w800'},
+        { image: 'https://lh3.googleusercontent.com/e4h3RzBA1KSGYt1hrFQIR7IRV5ZfQc0tvonCi6QLZs-nCexIQAPnTYhSQXVUQegHRcwY-Hho4LVMT7oGGAoK8jGS6oWR8eqCjB-zbc4MOtWht0MhG4eI=w800'},
+        { image: 'https://lh3.googleusercontent.com/2BYv8Olc0XOBpB-Gl5IZ9UjSAq2zo_YBc2nHXjYIozUCg2dQJR-mf8Eu146Yz-TG-ZVp6B2RkVGzcM_lLk_7RYj0ty43hXN3zyJaB-cNwIHLlqv_b8xQtg=w800'},
+        { image: 'https://lh3.googleusercontent.com/HmzNEQK8UdlJRhJG-njJnJgdNb1SOcwDs-stVFyUGY2IvX5FUYfUU58s54uyijO7d2KbbZCMYEm-h2cAqi0a6ClHN9W3Tb2-836dDAiRmXX9O_4Z5C--OQ=w800'},
+      ]
+    };
+
+    function renderNotices(list){
+      document.getElementById('noticeList').innerHTML = list.map(n => `
+        <li class="notice-item">
+          <span class="notice-tag">${escapeHtml(n.tag)}</span>
+          <span class="notice-date">${escapeHtml(n.date)}</span>
+          <p class="notice-title">${escapeHtml(n.title)}</p>
+          <p class="notice-body">${escapeHtml(n.body)}</p>
+        </li>
+      `).join('');
+    }
+
+    function renderPriceCategories(list){
+      document.getElementById('priceTable').innerHTML = list.map(cat => `
+        <div class="price-category">
+          <h3 class="price-category-name">${escapeHtml(cat.category)}</h3>
+          <div class="price-groups">
+            ${(cat.groups || []).map(g => `
+              <div class="price-group">
+                <p class="price-group-label">${escapeHtml(g.label)}</p>
+                <div class="price-items">
+                  ${(g.items || []).map(it => `
+                    <span class="price-chip">
+                      <span class="price-chip-name">${escapeHtml(it.name)}</span>
+                      <span class="price-chip-amount">${escapeHtml(it.price)}</span>
+                    </span>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPortfolio(list){
+      document.getElementById('portfolioGrid').innerHTML = list.map(p => `
+        <figure class="portfolio-item">
+          ${p.image ? `<img class="portfolio-img" src="${escapeHtml(p.image)}" alt="${escapeHtml(p.caption)}" loading="lazy">` : `<div class="portfolio-ph">이미지</div>`}
+          <figcaption>${escapeHtml(p.caption)}</figcaption>
+        </figure>
+      `).join('');
+    }
+
+    function renderSiteData(data){
+      renderNotices(data.notices || []);
+      renderPriceCategories(data.priceCategories || []);
+      renderPortfolio(data.portfolio || []);
+    }
+
+    fetch('./data.json')
+      .then(res => { if(!res.ok) throw new Error('no data.json'); return res.json(); })
+      .then(data => renderSiteData(data))
+      .catch(() => renderSiteData(DEFAULT_SITE_DATA));
+
+    const toggle = document.getElementById('navToggle');
+    const navList = document.getElementById('navList');
+    toggle.addEventListener('click', () => {
+      const open = navList.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    navList.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        navList.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    const navLinks = document.querySelectorAll('[data-nav]');
+    const sections = [...navLinks].map(a => document.querySelector(a.getAttribute('href')));
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          navLinks.forEach(a => a.classList.remove('active'));
+          const match = document.querySelector(`[data-nav][href="#${entry.target.id}"]`);
+          if(match) match.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' });
+    sections.forEach(sec => sec && spy.observe(sec));
+
+    // ---------- 문의 양식: 복사 / PDF 다운로드 ----------
+    function getFormData(){
+      return {
+        name: document.getElementById('fName').value.trim(),
+        contact: document.getElementById('fContact').value.trim(),
+        type: document.getElementById('fType').value,
+        budget: document.getElementById('fBudget').value.trim(),
+        message: document.getElementById('fMessage').value.trim(),
+      };
+    }
+
+    function showStatus(msg){
+      const el = document.getElementById('formStatus');
+      el.textContent = msg;
+      clearTimeout(el._t);
+      el._t = setTimeout(() => { el.textContent = ''; }, 3000);
+    }
+
+    function escapeHtml(str){
+      return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function buildText(data){
+      const typeText = (data.type && data.type !== '선택해주세요') ? data.type : '-';
+      return [
+        '[커미션 문의]',
+        `닉네임: ${data.name || '-'}`,
+        `연락 방법: ${data.contact || '-'}`,
+        `커미션 종류: ${typeText}`,
+        `예산: ${data.budget || '-'}`,
+        '요청 내용:',
+        data.message || '-'
+      ].join('\n');
+    }
+
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      const data = getFormData();
+      if(!data.message){ showStatus('요청 내용을 입력해주세요.'); return; }
+      const text = buildText(data);
+      try{
+        await navigator.clipboard.writeText(text);
+        showStatus('복사되었습니다.');
+      }catch(e){
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try{
+          document.execCommand('copy');
+          showStatus('복사되었습니다.');
+        }catch(err){
+          showStatus('복사에 실패했습니다. 직접 선택해 복사해주세요.');
+        }
+        document.body.removeChild(ta);
+      }
+    });
+
+    document.getElementById('pdfBtn').addEventListener('click', () => {
+      const data = getFormData();
+      if(!data.message){ showStatus('요청 내용을 입력해주세요.'); return; }
+      const typeText = (data.type && data.type !== '선택해주세요') ? data.type : '-';
+      const tpl = document.getElementById('pdfTemplate');
+      tpl.innerHTML = `
+        <h2>커미션 문의 내용</h2>
+        <div class="pdf-row"><div class="pdf-label">닉네임</div><div class="pdf-value">${escapeHtml(data.name) || '-'}</div></div>
+        <div class="pdf-row"><div class="pdf-label">연락 방법</div><div class="pdf-value">${escapeHtml(data.contact) || '-'}</div></div>
+        <div class="pdf-row"><div class="pdf-label">커미션 종류</div><div class="pdf-value">${escapeHtml(typeText)}</div></div>
+        <div class="pdf-row"><div class="pdf-label">예산</div><div class="pdf-value">${escapeHtml(data.budget) || '-'}</div></div>
+        <div class="pdf-row"><div class="pdf-label">요청 내용</div><div class="pdf-value">${escapeHtml(data.message)}</div></div>
+        <p class="pdf-date">${new Date().toLocaleDateString('ko-KR')}</p>
+      `;
+      showStatus('PDF 생성 중...');
+      html2canvas(tpl, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 40;
+        let imgWidth = pageWidth - margin * 2;
+        let imgHeight = canvas.height * imgWidth / canvas.width;
+        if(imgHeight > pageHeight - margin * 2){
+          const ratio = (pageHeight - margin * 2) / imgHeight;
+          imgHeight *= ratio;
+          imgWidth *= ratio;
+        }
+        const x = (pageWidth - imgWidth) / 2;
+        pdf.addImage(imgData, 'PNG', x, margin, imgWidth, imgHeight);
+        pdf.save(`커미션문의_${data.name || '무제'}.pdf`);
+        showStatus('PDF가 다운로드되었습니다.');
+      }).catch(() => showStatus('PDF 생성에 실패했습니다.'));
+    });
+  </script>
+
+</body>
+</html>
